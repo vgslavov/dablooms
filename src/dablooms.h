@@ -52,6 +52,7 @@ int counting_bloom_remove(counting_bloom_t *bloom, const char *s, size_t len);
 int counting_bloom_check(counting_bloom_t *bloom, const char *s, size_t len);
 
 int counting_bloom_get_counters(counting_bloom_t *bloom, const char *s, size_t len, int *c[]);
+int counting_bloom_check_counters(counting_bloom_t *bloom, const char *s, size_t len, const int c[]);
 
 typedef struct {
     uint64_t max_id;

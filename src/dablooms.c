@@ -328,6 +328,36 @@ int counting_bloom_get_counters(counting_bloom_t *bloom, const char *s, size_t l
     return 1;
 }
 
+// compare counters of given string (and CBF) with given c[]
+int counting_bloom_check_counters(counting_bloom_t *bloom, const char *s, size_t len, const int c[])
+{
+    unsigned int index, i, offset;
+    unsigned int *hashes = bloom->hashes;
+    int ret;
+
+    hash_func(bloom, s, len, hashes);
+
+    for (i = 0; i < bloom->nfuncs; i++) {
+        offset = i * bloom->counts_per_func;
+        index = hashes[i] + offset;
+        ret = bitmap_check(bloom->bitmap, index, bloom->offset);
+        if (!ret) {
+            return 0;
+        } else if (ret > 0x0f) {
+          ret = (ret >> 4);
+        }
+        fprintf(stderr, "%d:%d ", c[i], ret);
+
+        // no match: data counter is less than query counter
+        if (ret < c[i]) {
+          fprintf(stderr, "\n");
+          return 0;
+        }
+    }
+    fprintf(stderr, "\n");
+    return 1;
+}
+
 int free_scaling_bloom(scaling_bloom_t *bloom)
 {
     int i;
