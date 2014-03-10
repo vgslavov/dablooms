@@ -301,6 +301,33 @@ int counting_bloom_check(counting_bloom_t *bloom, const char *s, size_t len)
     return 1;
 }
 
+// get value of counters for a given string and CBF,
+// store counters in c[]
+int counting_bloom_get_counters(counting_bloom_t *bloom, const char *s, size_t len, int *c[])
+{
+    unsigned int index, i, offset;
+    unsigned int *hashes = bloom->hashes;
+    int ret;
+
+    hash_func(bloom, s, len, hashes);
+
+    for (i = 0; i < bloom->nfuncs; i++) {
+        offset = i * bloom->counts_per_func;
+        index = hashes[i] + offset;
+        ret = bitmap_check(bloom->bitmap, index, bloom->offset);
+        if (!ret) {
+            return 0;
+        } else if (ret > 0x0f) {
+            ret = (ret >> 4);
+        }
+        //fprintf(stderr, "%d\n", ret);
+
+        // don't forget the ()!
+        (*c)[i] = ret;
+    }
+    return 1;
+}
+
 int free_scaling_bloom(scaling_bloom_t *bloom)
 {
     int i;
